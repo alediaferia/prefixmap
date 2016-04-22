@@ -97,8 +97,36 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
 			goto next_child
 		}
 
+		// TODO
 		// third case: given key partially matches with
 		// current node key
+		// this means we have to split the existing node
+		// into two nodes and append the new content accordingly
+		//
+		// e.g.
+		// Key to be inserted: 'string'
+		// Node found: 'stringmap'
+		// => we need to split 'stringmap' into 'string' and 'map'
+		//    in order to be able to set a value for the key 'string'
+		//    and still maintain the value(s) associated with 'stringmap'
+		//    in the new 'map' node
+		//
+		// States can be represented as following:
+		//
+		// State 1:
+		//
+		// 		o (root)
+		// 		|
+		// 		o (stringmap) = (some values)
+		//
+		// State 2 after inserting key 'string' into the map:
+		//
+		//		o (root)
+		//		|
+		//		o (string) = (some values associated with 'string' key)
+		//		|
+		//		o (map)	   = (some values associated with 'stringmap' key)
+		
 		key_ = key_[lcp_i+1:]
 		last_node = current_node
 		children = current_node.Children
