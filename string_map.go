@@ -65,7 +65,7 @@ func (m *Node) increaseDepth() {
 // Algorithm: BFS
 func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
 	var last_node *Node
-	var current_node *Node = m
+	var current_node = m
 
 	key_ := []rune(key) // we need to edit the key
 
