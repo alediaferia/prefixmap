@@ -4,10 +4,24 @@ import (
 	"testing"
 )
 
+// testing basic insert functionality
 func TestInsert(t *testing.T) {
 	m := NewMap()
 	expectedValues := []string{ "Diaferia", "alediaferia", "adiaferia" }
 	m.Insert("Alessandro", expectedValues...)
+
+	node := m.nodeForKey("Alessandro", false)
+	if testEq(expectedValues, node.data) != true {
+		t.Errorf("Unexpected value for node 'Alessandro': expected (%v), got (%v)", expectedValues, node.data)
+	}
+}
+
+// testing if insert appends values to the node
+func TestInsertAppends(t *testing.T) {
+	m := NewMap()
+	expectedValues := []string{ "Diaferia", "alediaferia", "adiaferia" }
+	m.Insert("Alessandro", expectedValues[:2]...) // first two values
+	m.Insert("Alessandro", expectedValues[2:]...) // rest
 
 	node := m.nodeForKey("Alessandro", false)
 	if testEq(expectedValues, node.data) != true {
