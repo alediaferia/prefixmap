@@ -29,6 +29,22 @@ func TestInsertAppends(t *testing.T) {
     }
 }
 
+func TestSubstringKeys(t *testing.T) {
+    m := NewMap()
+    expectedValues := []string{ "Diaferia", "alediaferia", "adiaferia" }
+    m.Insert("stringmap", expectedValues[:2]...) // first two values
+    m.Insert("string", expectedValues[2:]...) // rest
+
+    node := m.nodeForKey("stringmap", false)
+    if testEq(expectedValues[:2], node.data) != true {
+        t.Errorf("Unexpected value for node 'stringmap': expected (%v), got (%v)", expectedValues[:2], node.data)
+    }
+    node = m.nodeForKey("string", false)
+    if testEq(expectedValues[2:], node.data) != true {
+        t.Errorf("Unexpected value for node 'string': expected (%v), got (%v)", expectedValues[2:], node.data)
+    }
+}
+
 func TestLcp(t *testing.T) {
     lcpTestCases := []struct {
         source, destination, expected string
