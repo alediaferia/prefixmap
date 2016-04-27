@@ -43,7 +43,7 @@ func TestSubstringKeys(t *testing.T) {
     if testEq(expectedValues[2:], node.data) != true {
         t.Errorf("Unexpected value for node 'string': expected (%v), got (%v)", expectedValues[2:], node.data)
     }
-    
+
     if count := m.countNodes(); count != 3 {
         t.Errorf("Unexpected node count: got %d, expected %d", count, 3)
     }
@@ -73,17 +73,17 @@ func TestLcp(t *testing.T) {
 func TestSplit(t *testing.T) {
     m := NewMap()
     m.Insert("stringmap", "a", "b", "c")
-    
+
     node := m.nodeForKey("stringmap", false)
     node.split("string")
     if len(node.Children) != 1 {
         t.Errorf("'stringmap' node should only have 1 child")
     }
-    
+
     if (string(node.key) != "string") {
         t.Errorf("Node is expected to have key 'string'")
     }
-    
+
     if (string(node.Children[0].key) != "map") {
         t.Errorf("Node is expected to have key 'map'")
     }
@@ -115,17 +115,17 @@ func testEq(a, b []string) bool {
 
 func (m *Node) countNodes() int {
     queue := newQueue()
-    
+
     queue.enqueue(m)
     count := 0
     for !queue.isEmpty() {
         node := queue.dequeue()
         count++
-        
+
         for _, c := range node.Children {
             queue.enqueue(c)
         }
     }
-    
+
     return count
 }

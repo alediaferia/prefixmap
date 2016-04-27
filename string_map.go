@@ -24,10 +24,10 @@ type Node struct {
 
 func newNode() (m *Node) {
     m = new(Node)
-    
+
     m.IsLeaf = false
     m.Parent = nil
-    
+
     m.key = make([]rune, 0, k_DEFAULT_KEY_ALLOC_SIZE)
     m.data = make([]string, 0, k_DEFAULT_KEY_ALLOC_SIZE)
 
@@ -37,9 +37,9 @@ func newNode() (m *Node) {
 // NewMap returns a new empty map
 func NewMap() (m *Node) {
     m = newNode()
-    
+
     m.IsLeaf = false
-    
+
     m.isRoot = true
     m.depth = 0
 
@@ -101,7 +101,7 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
         if lcpI == -1 {
             goto next_child
         }
-        
+
         // in this case the key we are looking for is a substring
         // of the current node key so we need to split the node
         if lcpI == (len(key_) - 1) && lcpI < (len(current_node.key) - 1) {
@@ -137,7 +137,7 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
         //        o (string) = (some values associated with 'string' key)
         //        |
         //        o (map)    = (some values associated with 'stringmap' key)
-        
+
         key_ = key_[lcpI+1:]
         last_node = current_node
         children = current_node.Children
@@ -167,12 +167,12 @@ func (m *Node) split(subkey string) {
     subNode.increaseDepth()
     subNode.Parent = m
     subNode.IsLeaf = true
-    
+
     // adjusting children parent
     for _, child := range subNode.Children {
         child.Parent = subNode
     }
-    
+
     m.key = []rune(leftKey)
     m.Children = []*Node{ subNode }
     m.data = []string{}
