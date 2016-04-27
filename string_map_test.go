@@ -66,6 +66,25 @@ func TestLcp(t *testing.T) {
     }
 }
 
+func TestSplit(t *testing.T) {
+    m := NewMap()
+    m.Insert("stringmap", "a", "b", "c")
+    
+    node := m.nodeForKey("stringmap", false)
+    node.split("string")
+    if len(node.Children) != 1 {
+        t.Errorf("'stringmap' node should only have 1 child")
+    }
+    
+    if (string(node.key) != "string") {
+        t.Errorf("Node is expected to have key 'string'")
+    }
+    
+    if (string(node.Children[0].key) != "map") {
+        t.Errorf("Node is expected to have key 'map'")
+    }
+}
+
 /* utils */
 func testEq(a, b []string) bool {
 

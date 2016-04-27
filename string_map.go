@@ -109,7 +109,6 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
             return current_node
         }
 
-        // TODO
         // third case: given key partially matches with
         // current node key
         // this means we have to split the existing node
@@ -167,6 +166,7 @@ func (m *Node) split(subkey string) {
     subNode.key = rightKey
     subNode.increaseDepth()
     subNode.Parent = m
+    subNode.IsLeaf = true
     
     // adjusting children parent
     for _, child := range subNode.Children {
@@ -175,6 +175,7 @@ func (m *Node) split(subkey string) {
     
     m.key = []rune(leftKey)
     m.Children = []*Node{ subNode }
+    m.data = []string{}
 }
 
 func (m *Node) copyNode() (*Node) {
