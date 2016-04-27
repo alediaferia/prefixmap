@@ -92,6 +92,45 @@ func TestSplit(t *testing.T) {
     }
 }
 
+type nodeTest struct {
+    words []string
+    nodes int
+}
+
+var nodeTests = []nodeTest{
+    {[]string{
+        "romane",
+        "romanus",
+        "romulus",
+        "rubens",
+        "ruber",
+        "rubicon",
+        "rubicundus",
+    }, 14,
+    },
+    {[]string{
+        "arma",
+        "armatura",
+        "armento",
+    }, 5,
+    },
+}
+
+func TestNodeCount(t *testing.T) {
+    for _, v := range nodeTests {
+        m := NewMap()
+        // appending nodes
+        for _, w := range v.words {
+            m.Insert(w, w)
+        }
+
+        count := m.countNodes()
+        if count != v.nodes {
+            t.Errorf("Unexpected node count: got %d, expected %d", count, v.nodes)
+        }
+    }
+}
+
 func Benchmark_nodesAllocation(b *testing.B) {
     b.StopTimer()
 
