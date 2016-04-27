@@ -2,6 +2,9 @@ package stringmap
 
 import (
     "testing"
+    "bufio"
+    "os"
+    "io"
 )
 
 // testing basic insert functionality
@@ -86,6 +89,41 @@ func TestSplit(t *testing.T) {
 
     if (string(node.Children[0].key) != "map") {
         t.Errorf("Node is expected to have key 'map'")
+    }
+}
+
+func Benchmark_nodesAllocation(b *testing.B) {
+    b.StopTimer()
+
+    // building country name
+    // source from file
+    file, err := os.Open("/usr/share/dict/words")
+    words := make([]string, 0)
+    if err != nil {
+        b.Log("Cannot open expected file /usr/share/dict/words. Skipping this benchmark.")
+        b.SkipNow()
+        return
+    }
+    reader := bufio.NewReader(file)
+    for {
+        line, err := reader.ReadString('\n')
+        if err == io.EOF {
+            break
+        }
+        words = append(words, line[:len(line)-1])
+    }
+
+    b.Logf("Inserting %d words in the trie", b.N)
+
+    m := NewMap()
+
+    b.ResetTimer()
+    b.StartTimer()
+    b.ReportAllocs()
+
+    for i := 0; i < b.N; i++ {
+        word := words[i % len(words)]
+        m.Insert(word, word)
     }
 }
 
