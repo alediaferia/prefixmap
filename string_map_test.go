@@ -43,6 +43,10 @@ func TestSubstringKeys(t *testing.T) {
     if testEq(expectedValues[2:], node.data) != true {
         t.Errorf("Unexpected value for node 'string': expected (%v), got (%v)", expectedValues[2:], node.data)
     }
+    
+    if count := m.countNodes(); count != 3 {
+        t.Errorf("Unexpected node count: got %d, expected %d", count, 3)
+    }
 }
 
 func TestLcp(t *testing.T) {
@@ -107,4 +111,21 @@ func testEq(a, b []string) bool {
     }
 
     return true
+}
+
+func (m *Node) countNodes() int {
+    queue := newQueue()
+    
+    queue.enqueue(m)
+    count := 0
+    for !queue.isEmpty() {
+        node := queue.dequeue()
+        count++
+        
+        for _, c := range node.Children {
+            queue.enqueue(c)
+        }
+    }
+    
+    return count
 }

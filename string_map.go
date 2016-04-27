@@ -198,6 +198,9 @@ func (m *Node) appendNode(n *Node) *Node {
     return n
 }
 
+// Insert inserts a new value in the map for the specified key
+// If the key is already present in the map, the value is appended
+// to the values list associated with the given key
 func (m *Node) Insert(key string, values ...string) {
     n := m.nodeForKey(key, true)
     n.data = append(n.data, values...)
