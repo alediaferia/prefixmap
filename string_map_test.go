@@ -5,6 +5,7 @@ import (
     "bufio"
     "os"
     "io"
+    "fmt"
 )
 
 // testing basic insert functionality
@@ -58,7 +59,11 @@ func TestLcp(t *testing.T) {
         index int // expected index
     } {{
         "string", "stringmap", "string",
-        len("string") - 1,
+        5,
+    },
+    {
+        "romane", "romanus", "roman",
+        4,
     }}
 
     for _, testCase := range lcpTestCases {
@@ -69,6 +74,10 @@ func TestLcp(t *testing.T) {
 
         if index != testCase.index {
             t.Errorf("Unexpected lcp index: got %d, expected %d", index, testCase.index)
+        }
+        
+        if testCase.source[:testCase.index+1] != testCase.expected {
+           t.Errorf("Unexpected substring index: got %s, expected %s", testCase.source[:testCase.index+1], testCase.expected)
         }
     }
 }
@@ -122,10 +131,12 @@ func TestNodeCount(t *testing.T) {
         // appending nodes
         for _, w := range v.words {
             m.Insert(w, w)
+            //m.print()
         }
 
         count := m.countNodes()
         if count != v.nodes {
+            m.print()
             t.Errorf("Unexpected node count: got %d, expected %d", count, v.nodes)
         }
     }
@@ -205,4 +216,29 @@ func (m *Node) countNodes() int {
     }
 
     return count
+}
+
+func (m *Node) print() {
+    q := newQueue()
+    last_depth := m.depth
+
+    fmt.Print("Map: \n")
+    fmt.Print("---------\n")
+    q.enqueue(m)
+    for !q.isEmpty() {
+        n := q.dequeue()
+        if n.isRoot {
+            fmt.Print("/")
+        } else {
+            if n.depth > last_depth {
+                fmt.Println()
+            }
+            fmt.Printf("(%s,%d)\t", string(n.key), n.depth)
+        }
+        for _, c := range n.Children {
+            q.enqueue(c)
+        }
+        last_depth = n.depth
+    }
+    fmt.Print("\n---------\n\n")
 }

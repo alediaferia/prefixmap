@@ -69,7 +69,7 @@ func (m *Node) increaseDepth() {
 //
 // Algorithm: BFS
 func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
-    var last_node *Node
+    var last_node = m
     var current_node = m
 
     key_ := []rune(key) // we need to edit the key
@@ -87,7 +87,11 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
                 break
             }
             children = current_node.Children
-            goto next_child
+            if len(children) > 0 {
+                current_node, children = children[0], children[1:]
+                continue
+            }
+            break
         }
 
         // key matches current node: returning it
@@ -99,16 +103,43 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
 
         // current node is not the one
         if lcpI == -1 {
-            goto next_child
+            if len(children) > 0 {
+                current_node, children = children[0], children[1:]
+                continue
+            }
+            break
         }
+
+        var subKey string
+        subKey, key_ = string(current_node.key[:lcpI+1]), key_[lcpI+1:]
 
         // in this case the key we are looking for is a substring
         // of the current node key so we need to split the node
-        if lcpI == (len(key_) - 1) && lcpI < (len(current_node.key) - 1) {
-            current_node.split(string(key_))
+        if len(key_) == 0 {
+            if createIfMissing == true {
+                current_node.split(subKey)
+            }
             return current_node
         }
+        
+        // current node key is a substring of the requested
+        // key so we go deep in the tree from here
+        if lcpI == len(current_node.key) - 1 {
+            last_node = current_node
+            children = current_node.Children
+            if len(children) == 0 {
+                break
+            }
+            current_node, children = children[0], children[1:]
+            continue
+        }
 
+        if createIfMissing == true {
+            current_node.split(subKey)
+            last_node = current_node
+            break
+        }
+        
         // third case: given key partially matches with
         // current node key
         // this means we have to split the existing node
@@ -137,22 +168,11 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
         //        o (string) = (some values associated with 'string' key)
         //        |
         //        o (map)    = (some values associated with 'stringmap' key)
-
-        key_ = key_[lcpI+1:]
-        last_node = current_node
-        children = current_node.Children
-
-    next_child:
-        if len(children) > 0 {
-            current_node, children = children[0], children[1:]
-            continue
-        }
-        break
     }
 
-    if createIfMissing && last_node == nil {
-        last_node = nodeWithKey(key_)
-        m.appendNode(last_node)
+    if createIfMissing == true {
+        newNode := nodeWithKey(key_)
+        return last_node.appendNode(newNode)
     }
 
     return last_node
@@ -176,6 +196,7 @@ func (m *Node) split(subkey string) {
     m.key = []rune(leftKey)
     m.Children = []*Node{ subNode }
     m.data = []string{}
+    m.IsLeaf = false
 }
 
 func (m *Node) copyNode() (*Node) {
@@ -239,7 +260,7 @@ func lcp(strs ...string) (string, int) {
     }
     for i := 0; i < len(min) && i < len(max); i++ {
         if min[i] != max[i] {
-            return min[:i], i
+            return min[:i], i - 1
         }
     }
     // In the case where lengths are not equal but all bytes
