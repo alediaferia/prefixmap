@@ -67,11 +67,7 @@ func TestLcp(t *testing.T) {
     }}
 
     for _, testCase := range lcpTestCases {
-        value, index := lcp(testCase.source, testCase.destination)
-        if value != testCase.expected {
-            t.Errorf("Unexpected lcp value: got '%s', expected '%s'", value, testCase.expected)
-        }
-
+        index := lcp(testCase.source, testCase.destination)
         if index != testCase.index {
             t.Errorf("Unexpected lcp index: got %d, expected %d", index, testCase.index)
         }
@@ -87,7 +83,7 @@ func TestSplit(t *testing.T) {
     m.Insert("stringmap", "a", "b", "c")
 
     node := m.nodeForKey("stringmap", false)
-    node.split("string")
+    node.split(6)
     if len(node.Children) != 1 {
         t.Errorf("'stringmap' node should only have 1 child")
     }
@@ -142,7 +138,7 @@ func TestNodeCount(t *testing.T) {
     }
 }
 
-func Benchmark_nodesAllocation(b *testing.B) {
+func BenchmarkInsertAllocation(b *testing.B) {
     b.StopTimer()
 
     // building country name
@@ -174,6 +170,46 @@ func Benchmark_nodesAllocation(b *testing.B) {
     for i := 0; i < b.N; i++ {
         word := words[i % len(words)]
         m.Insert(word, word)
+    }
+}
+
+func BenchmarkContains(b *testing.B) {
+    b.StopTimer()
+
+    // building country name
+    // source from file
+    file, err := os.Open("/usr/share/dict/words")
+    words := make([]string, 0)
+    if err != nil {
+        b.Log("Cannot open expected file /usr/share/dict/words. Skipping this benchmark.")
+        b.SkipNow()
+        return
+    }
+    reader := bufio.NewReader(file)
+    for {
+        line, err := reader.ReadString('\n')
+        if err == io.EOF {
+            break
+        }
+        words = append(words, line[:len(line)-1])
+    }
+    m := NewMap()
+
+    for i := 0; i < b.N; i++ {
+        word := words[i % len(words)]
+        m.Insert(word, word)
+    }
+
+    b.ResetTimer()
+    b.StartTimer()
+    
+    var found = false
+    for i := 0; i < b.N; i++ {
+        word := words[i % len(words)]
+        found = m.Contains(word)
+        if found != true {
+            b.Fatalf("Unexpected: couldn't find word '%s'", word)
+        }
     }
 }
 

@@ -27,19 +27,13 @@ func newNode() (m *Node) {
 
     m.IsLeaf = false
     m.Parent = nil
-
-    m.key = make([]rune, 0, k_DEFAULT_KEY_ALLOC_SIZE)
-    m.data = make([]string, 0, k_DEFAULT_KEY_ALLOC_SIZE)
-
+    
     return
 }
 
 // NewMap returns a new empty map
 func NewMap() (m *Node) {
     m = newNode()
-
-    m.IsLeaf = false
-
     m.isRoot = true
     m.depth = 0
 
@@ -94,12 +88,7 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
             break
         }
 
-        // key matches current node: returning it
-        if string(key_) == string(current_node.key) {
-            return current_node
-        }
-
-        _, lcpI = lcp(string(key_), string(current_node.key))
+        lcpI = lcp(string(key_), string(current_node.key))
 
         // current node is not the one
         if lcpI == -1 {
@@ -109,15 +98,18 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
             }
             break
         }
-
-        var subKey string
-        subKey, key_ = string(current_node.key[:lcpI+1]), key_[lcpI+1:]
+               
+        // key matches current node: returning it
+        if lcpI == len(key_) - 1 && lcpI == len(current_node.key) - 1 {
+            return current_node
+        }
+        key_ = key_[lcpI+1:]
 
         // in this case the key we are looking for is a substring
         // of the current node key so we need to split the node
         if len(key_) == 0 {
             if createIfMissing == true {
-                current_node.split(subKey)
+                current_node.split(lcpI+1)
             }
             return current_node
         }
@@ -135,7 +127,7 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
         }
 
         if createIfMissing == true {
-            current_node.split(subKey)
+            current_node.split(lcpI+1)
             last_node = current_node
             break
         }
@@ -171,17 +163,16 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
     }
 
     if createIfMissing == true {
-        newNode := nodeWithKey(key_)
+        newNode := newNodeWithKey(key_)
         return last_node.appendNode(newNode)
     }
 
     return last_node
 }
 
-func (m *Node) split(subkey string) {
-    _, lcpIndex := lcp(string(m.key), subkey)
-    rightKey := m.key[lcpIndex+1:]
-    leftKey  := subkey
+func (m *Node) split(index int) {
+    rightKey := m.key[index:]
+    leftKey  := m.key[:index]
     subNode := m.copyNode()
     subNode.key = rightKey
     subNode.increaseDepth()
@@ -200,12 +191,12 @@ func (m *Node) split(subkey string) {
 }
 
 func (m *Node) copyNode() (*Node) {
-    n := newNode()
+    n := &Node{}
     *n = *m
     return n
 }
 
-func nodeWithKey(key []rune) *Node {
+func newNodeWithKey(key []rune) *Node {
     n := newNode()
     n.key = key
     return n
@@ -227,6 +218,10 @@ func (m *Node) Insert(key string, values ...string) {
     n.data = append(n.data, values...)
 }
 
+func (m *Node) Contains(key string) bool {
+    return m.nodeForKey(key, false) != nil
+}
+
 // func (m *Node) Replace(key string, values ...string) {
 // }
 
@@ -239,13 +234,16 @@ func (m *Node) Insert(key string, values ...string) {
 // returns the lcp and the index of the last
 // character matching
 //
-func lcp(strs ...string) (string, int) {
+func lcp(strs ...string) int {
+    if len(strs) < 2 {
+        return -1
+    }
     // Special cases first
     switch len(strs) {
     case 0:
-        return "", -1
+        return -1
     case 1:
-        return strs[0], 0
+        return 0
     }
     // LCP of min and max (lexigraphically)
     // is the LCP of the whole set.
@@ -260,10 +258,10 @@ func lcp(strs ...string) (string, int) {
     }
     for i := 0; i < len(min) && i < len(max); i++ {
         if min[i] != max[i] {
-            return min[:i], i - 1
+            return i - 1
         }
     }
     // In the case where lengths are not equal but all bytes
     // are equal, min is the answer ("foo" < "foobar").
-    return min, (len(min) - 1)
+    return len(min) - 1
 }
