@@ -1,7 +1,7 @@
 package stringmap
 
 import (
-    _ "strings"
+    "gopkg.in/alediaferia/stackgo.v1"
 )
 
 // constants
@@ -19,7 +19,7 @@ type Node struct {
     key    []byte
     isRoot bool
     //depth  int64
-    data   []string
+    data []string
 }
 
 func newNode() (m *Node) {
@@ -27,7 +27,7 @@ func newNode() (m *Node) {
 
     m.IsLeaf = false
     m.Parent = nil
-    
+
     return
 }
 
@@ -47,7 +47,7 @@ func (m *Node) Depth() int {
         depth++
         parent = parent.Parent
     }
-    
+
     return depth
 }
 
@@ -91,9 +91,9 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
             }
             break
         }
-               
+
         // key matches current node: returning it
-        if lcpI == len(key_) - 1 && lcpI == len(current_node.key) - 1 {
+        if lcpI == len(key_)-1 && lcpI == len(current_node.key)-1 {
             return current_node
         }
         key_ = key_[lcpI+1:]
@@ -102,14 +102,14 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
         // of the current node key so we need to split the node
         if len(key_) == 0 {
             if createIfMissing == true {
-                current_node.split(lcpI+1)
+                current_node.split(lcpI + 1)
             }
             return current_node
         }
-        
+
         // current node key is a substring of the requested
         // key so we go deep in the tree from here
-        if lcpI == len(current_node.key) - 1 {
+        if lcpI == len(current_node.key)-1 {
             last_node = current_node
             children = current_node.Children
             if len(children) == 0 {
@@ -120,14 +120,15 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
         }
 
         if createIfMissing == true {
-            current_node.split(lcpI+1)
+            current_node.split(lcpI + 1)
             last_node = current_node
             break
         }
-        
-        // third case: given key partially matches with
-        // current node key
-        // this means we have to split the existing node
+
+        // Important Case: given key partially matches with
+        // current node key.
+        //
+        // This means we have to split the existing node
         // into two nodes and append the new content accordingly
         //
         // e.g.
@@ -165,7 +166,7 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
 
 func (m *Node) split(index int) {
     rightKey := m.key[index:]
-    leftKey  := m.key[:index]
+    leftKey := m.key[:index]
     subNode := m.copyNode()
     subNode.key = rightKey
     subNode.Parent = m
@@ -177,12 +178,12 @@ func (m *Node) split(index int) {
     }
 
     m.key = []byte(leftKey)
-    m.Children = []*Node{ subNode }
+    m.Children = []*Node{subNode}
     m.data = []string{}
     m.IsLeaf = false
 }
 
-func (m *Node) copyNode() (*Node) {
+func (m *Node) copyNode() *Node {
     n := &Node{}
     *n = *m
     return n
@@ -210,12 +211,83 @@ func (m *Node) Insert(key string, values ...string) {
     n.data = append(n.data, values...)
 }
 
-func (m *Node) Contains(key string) bool {
-    return m.nodeForKey(key, false) != nil
+func (m *Node) Replace(key string, values ...string) {
+    n := m.nodeForKey(key, true)
+    n.data = values
 }
 
-// func (m *Node) Replace(key string, values ...string) {
-// }
+func (m *Node) Contains(key string) bool {
+    return m.nodeForKey(key, false) != nil && string(m.key) == key
+}
+
+func (m *Node) Key() string {
+    return string(m.key)
+}
+
+type PrefixCallback func(prefix Prefix) (skipBranch bool, halt bool)
+type Prefix struct {
+    node   *Node
+    Key    string
+    Values []string
+}
+
+func (p *Prefix) Depth() int {
+    return p.node.Depth()
+}
+
+// EachPrefix iterates over the prefixes contained in the
+// map using a DFS algorithm. The callback can be used to skip
+// a prefix branch altogether or halt the iteration.
+func (m *Node) EachPrefix(callback PrefixCallback) {
+    stack := stackgo.NewStack()
+    prefix := []byte{}
+
+    skipsubtree := false
+    halt := false
+    addedLengths := stackgo.NewStack()
+    lastDepth := m.Depth()
+
+    stack.Push(m)
+    for stack.Size() != 0 {
+        node := stack.Pop().(*Node)
+        if !node.isRoot {
+            // if we are now going up
+            // in the radix (e.g. we have
+            // finished with the current branch)
+            // then we adjust the current prefix
+            currentDepth := node.Depth()
+            if lastDepth >= node.Depth() {
+                var length = 0
+                for i := 0; i < (lastDepth - currentDepth)+1; i++ {
+                    length += addedLengths.Pop().(int)
+                }
+                prefix = prefix[:len(prefix)-length]
+            }
+            lastDepth = currentDepth
+            prefix = append(prefix, node.key...)
+            addedLengths.Push(len(node.key))
+
+            // building the info
+            // data to pass to the callback
+            info := Prefix{
+                node   : node,
+                Key    : string(prefix),
+                Values : node.data,
+            }
+
+            skipsubtree, halt = callback(info)
+            if halt {
+                return
+            }
+            if skipsubtree {
+                continue
+            }
+        }
+        for i := 0; i < len(node.Children); i++ {
+            stack.Push(node.Children[i])
+        }
+    }
+}
 
 // -------- auxiliary functions -------- //
 

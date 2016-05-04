@@ -159,6 +159,33 @@ func TestNodeCount(t *testing.T) {
     }
 }
 
+func TestPrefixIteration(t *testing.T) {
+    testCases := []struct {
+        keys, expectedPrefixes []string
+    }{
+        {
+            keys: []string{ "benchmark", "bench", "bob", "blueray", "bluetooth" },
+            expectedPrefixes: []string{ "b", "blue", "bluetooth", "blueray", "bob", "bench", "benchmark" },
+        },
+    }
+    
+    for _, tc := range testCases {
+        m := NewMap()
+        for _, key := range tc.keys {
+            m.Insert(key, key)
+        }
+        
+        foundPrefixes := []string{}
+        m.EachPrefix(func(prefix Prefix) (bool, bool) {
+            foundPrefixes = append(foundPrefixes, prefix.Key)
+            return false, false
+        })
+        if testEq(foundPrefixes, tc.expectedPrefixes) != true {
+            t.Errorf("Unexpected prefixes list: got %v, expected %v", foundPrefixes, tc.expectedPrefixes)
+        }
+    }
+}
+
 func BenchmarkInsertAllocations(b *testing.B) {
     b.StopTimer()
 
