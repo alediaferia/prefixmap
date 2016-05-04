@@ -16,7 +16,7 @@ type Node struct {
     Children []*Node
 
     // private
-    key    []rune
+    key    []byte
     isRoot bool
     depth  int64
     data   []string
@@ -41,14 +41,14 @@ func NewMap() (m *Node) {
 }
 
 func (m *Node) increaseDepth() {
-    last_depth := m.depth
+    lastDepth := m.depth
     q := newQueue()
     q.enqueue(m)
 
     for !q.isEmpty() {
         n := q.dequeue()
-        if n.depth > last_depth {
-            last_depth = n.depth
+        if n.depth > lastDepth {
+            lastDepth = n.depth
         }
 
         n.depth++
@@ -66,7 +66,7 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
     var last_node = m
     var current_node = m
 
-    key_ := []rune(key) // we need to edit the key
+    key_ := []byte(key) // we need to edit the key
 
     // holds the next children to explore
     var children []*Node
@@ -88,7 +88,7 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
             break
         }
 
-        lcpI = lcp(string(key_), string(current_node.key))
+        lcpI = lcp(key_, current_node.key)
 
         // current node is not the one
         if lcpI == -1 {
@@ -184,7 +184,7 @@ func (m *Node) split(index int) {
         child.Parent = subNode
     }
 
-    m.key = []rune(leftKey)
+    m.key = []byte(leftKey)
     m.Children = []*Node{ subNode }
     m.data = []string{}
     m.IsLeaf = false
@@ -196,7 +196,7 @@ func (m *Node) copyNode() (*Node) {
     return n
 }
 
-func newNodeWithKey(key []rune) *Node {
+func newNodeWithKey(key []byte) *Node {
     n := newNode()
     n.key = key
     return n
@@ -234,7 +234,7 @@ func (m *Node) Contains(key string) bool {
 // returns the lcp and the index of the last
 // character matching
 //
-func lcp(strs ...string) int {
+func lcp(strs ...[]byte) int {
     if len(strs) < 2 {
         return -1
     }
@@ -248,11 +248,13 @@ func lcp(strs ...string) int {
     // LCP of min and max (lexigraphically)
     // is the LCP of the whole set.
     min, max := strs[0], strs[0]
-    for _, s := range strs[1:] {
+    part := strs[1:]
+    for i := 0; i < len(part); i++ {
+        s := part[i]
         switch {
-        case s < min:
+        case len(s) < len(min):
             min = s
-        case s > max:
+        case len(s) > len(max):
             max = s
         }
     }

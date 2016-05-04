@@ -67,7 +67,7 @@ func TestLcp(t *testing.T) {
     }}
 
     for _, testCase := range lcpTestCases {
-        index := lcp(testCase.source, testCase.destination)
+        index := lcp([]byte(testCase.source), []byte(testCase.destination))
         if index != testCase.index {
             t.Errorf("Unexpected lcp index: got %d, expected %d", index, testCase.index)
         }

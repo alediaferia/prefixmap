@@ -17,10 +17,10 @@ var queue_tests = []queue_test{
 func Test_queue(t *testing.T) {
     for _, v := range queue_tests {
         q := newQueue()
-        word := make([]rune, 0, len(v.w))
-        for _, c := range v.w {
+        word := make([]byte, 0, len(v.w))
+        for i := 0; i < len(v.w); i++ {
             t_ := newNode()
-            t_.key = append(t_.key, c)
+            t_.key = append(t_.key, v.w[i])
             q.enqueue(t_)
         }
 
