@@ -138,7 +138,7 @@ func TestNodeCount(t *testing.T) {
     }
 }
 
-func BenchmarkInsertAllocation(b *testing.B) {
+func BenchmarkInsertAllocations(b *testing.B) {
     b.StopTimer()
 
     // building country name
@@ -170,6 +170,46 @@ func BenchmarkInsertAllocation(b *testing.B) {
     for i := 0; i < b.N; i++ {
         word := words[i % len(words)]
         m.Insert(word, word)
+    }
+}
+
+func BenchmarkInsertNativeMapAllocations(b *testing.B) {
+     b.StopTimer()
+
+    // building country name
+    // source from file
+    file, err := os.Open("/usr/share/dict/words")
+    words := make([]string, 0)
+    if err != nil {
+        b.Log("Cannot open expected file /usr/share/dict/words. Skipping this benchmark.")
+        b.SkipNow()
+        return
+    }
+    reader := bufio.NewReader(file)
+    for {
+        line, err := reader.ReadString('\n')
+        if err == io.EOF {
+            break
+        }
+        words = append(words, line[:len(line)-1])
+    }
+
+    b.Logf("Inserting %d words in the trie", b.N)
+
+    m := make(map[string][]string)
+
+    b.ResetTimer()
+    b.StartTimer()
+    b.ReportAllocs()
+
+    for i := 0; i < b.N; i++ {
+        word := words[i % len(words)]
+        if v, ok := m[word]; ok == true {
+            v = append(v, word)
+            m[word] = v
+        } else {
+            m[word] = v
+        }
     }
 }
 
@@ -207,6 +247,51 @@ func BenchmarkContains(b *testing.B) {
     for i := 0; i < b.N; i++ {
         word := words[i % len(words)]
         found = m.Contains(word)
+        if found != true {
+            b.Fatalf("Unexpected: couldn't find word '%s'", word)
+        }
+    }
+}
+
+func BenchmarkContainsNativeMap(b *testing.B) {
+    b.StopTimer()
+
+    // building country name
+    // source from file
+    file, err := os.Open("/usr/share/dict/words")
+    words := make([]string, 0)
+    if err != nil {
+        b.Log("Cannot open expected file /usr/share/dict/words. Skipping this benchmark.")
+        b.SkipNow()
+        return
+    }
+    reader := bufio.NewReader(file)
+    for {
+        line, err := reader.ReadString('\n')
+        if err == io.EOF {
+            break
+        }
+        words = append(words, line[:len(line)-1])
+    }
+    m := make(map[string][]string)
+
+    for i := 0; i < b.N; i++ {
+        word := words[i % len(words)]
+        
+        if v, ok := m[word]; ok == true {
+            v = append(v, word)
+            m[word] = v
+        } else {
+            m[word] = v
+        }
+    }
+
+    b.ResetTimer()
+    b.StartTimer()
+    
+    for i := 0; i < b.N; i++ {
+        word := words[i % len(words)]
+        _, found := m[word]
         if found != true {
             b.Fatalf("Unexpected: couldn't find word '%s'", word)
         }
