@@ -33,7 +33,7 @@ func TestInsertAppends(t *testing.T) {
     }
 }
 
-func TestSubstringKeys(t *testing.T) {
+func TestInsertSubstringKeys(t *testing.T) {
     m := NewMap()
     expectedValues := []string{ "Diaferia", "alediaferia", "adiaferia" }
     m.Insert("stringmap", expectedValues[:2]...) // first two values
@@ -50,6 +50,27 @@ func TestSubstringKeys(t *testing.T) {
 
     if count := m.countNodes(); count != 3 {
         t.Errorf("Unexpected node count: got %d, expected %d", count, 3)
+    }
+}
+
+func TestPrefixAsKey(t *testing.T) {
+    testCases := []struct {
+        insertKey, getKey string
+        values []string
+    }{
+        {
+            insertKey: "stringmap",
+            getKey: "string",
+            values: []string{ "a", "b", "c" },
+        },
+    }
+    
+    for _, testCase := range testCases {
+        m := NewMap()
+        m.Insert(testCase.insertKey, testCase.values...)
+        if node := m.nodeForKey(testCase.getKey, false); testEq(node.data, testCase.values) != true {
+             t.Errorf("Unexpected value for node '%s': expected (%v), got (%v)", testCase.getKey, testCase.values, node.data)
+        }
     }
 }
 
