@@ -18,7 +18,7 @@ type Node struct {
     // private
     key    []byte
     isRoot bool
-    depth  int64
+    //depth  int64
     data   []string
 }
 
@@ -35,27 +35,20 @@ func newNode() (m *Node) {
 func NewMap() (m *Node) {
     m = newNode()
     m.isRoot = true
-    m.depth = 0
+    //m.depth = 0
 
     return
 }
 
-func (m *Node) increaseDepth() {
-    lastDepth := m.depth
-    q := newQueue()
-    q.enqueue(m)
-
-    for !q.isEmpty() {
-        n := q.dequeue()
-        if n.depth > lastDepth {
-            lastDepth = n.depth
-        }
-
-        n.depth++
-        for _, c := range n.Children {
-            q.enqueue(c)
-        }
+func (m *Node) Depth() int {
+    depth := 0
+    parent := m.Parent
+    for parent != nil {
+        depth++
+        parent = parent.Parent
     }
+    
+    return depth
 }
 
 // This method traverses the map to find an appropriate node
@@ -175,7 +168,6 @@ func (m *Node) split(index int) {
     leftKey  := m.key[:index]
     subNode := m.copyNode()
     subNode.key = rightKey
-    subNode.increaseDepth()
     subNode.Parent = m
     subNode.IsLeaf = true
 
@@ -203,7 +195,7 @@ func newNodeWithKey(key []byte) *Node {
 }
 
 func (m *Node) appendNode(n *Node) *Node {
-    n.depth = m.depth + 1
+    //n.depth = m.depth + 1
     m.Children = append(m.Children, n)
     n.IsLeaf = true
     n.Parent = m

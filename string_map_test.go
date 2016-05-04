@@ -341,7 +341,7 @@ func (m *Node) countNodes() int {
 
 func (m *Node) print() {
     q := newQueue()
-    last_depth := m.depth
+    last_depth := m.Depth()
 
     fmt.Print("Map: \n")
     fmt.Print("---------\n")
@@ -351,15 +351,15 @@ func (m *Node) print() {
         if n.isRoot {
             fmt.Print("/")
         } else {
-            if n.depth > last_depth {
+            if n.Depth() > last_depth {
                 fmt.Println()
             }
-            fmt.Printf("(%s,%d)\t", string(n.key), n.depth)
+            fmt.Printf("(%s,%d)\t", string(n.key), n.Depth())
         }
         for _, c := range n.Children {
             q.enqueue(c)
         }
-        last_depth = n.depth
+        last_depth = n.Depth()
     }
     fmt.Print("\n---------\n\n")
 }
