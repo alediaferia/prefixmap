@@ -1,26 +1,29 @@
-package stringmap
+package prefixmap
 
 import (
     "gopkg.in/alediaferia/stackgo.v1"
 )
 
-// constants
-const (
-    // default allocation space for keys
-    k_DEFAULT_KEY_ALLOC_SIZE = 10
-)
-
+// Node is a single node within
+// the map
 type Node struct {
-    IsLeaf   bool
-    Parent   *Node
+    // true if this node is a leaf node
+    IsLeaf bool
+
+    // the reference to the parent node
+    Parent *Node
+
+    // the children nodes
     Children []*Node
 
     // private
-    key    []byte
+    key    string
     isRoot bool
-    //depth  int64
-    data []string
+    data   []string
 }
+
+// PrefixMap type
+type PrefixMap Node
 
 func newNode() (m *Node) {
     m = new(Node)
@@ -31,15 +34,16 @@ func newNode() (m *Node) {
     return
 }
 
-// NewMap returns a new empty map
-func NewMap() (m *Node) {
-    m = newNode()
+// New returns a new empty map
+func New() *PrefixMap {
+    m := newNode()
     m.isRoot = true
-    //m.depth = 0
 
-    return
+    return (*PrefixMap)(m)
 }
 
+// Depth returns the depth of the
+// current node within the map
 func (m *Node) Depth() int {
     depth := 0
     parent := m.Parent
@@ -54,74 +58,75 @@ func (m *Node) Depth() int {
 // This method traverses the map to find an appropriate node
 // for the given key. Optionally, if no node is found, one is created.
 //
+// Returns an additional bool indicating if the node key is an exact match
+// for the given key parameter or false if it is the closest match found
 // Algorithm: BFS
-func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
-    var last_node = m
-    var current_node = m
-
-    key_ := []byte(key) // we need to edit the key
+func (m *Node) nodeForKey(key string, createIfMissing bool) (*Node, bool) {
+    var lastNode = m
+    var currentNode = m
 
     // holds the next children to explore
     var children []*Node
 
     var lcpI int // last lcp index
 
-    for current_node != nil && len(key_) > 0 {
+    for currentNode != nil && len(key) > 0 {
         // root is special case for us
         // since it doesn't hold any information
-        if current_node.isRoot {
-            if len(current_node.Children) == 0 {
+        if currentNode.isRoot {
+            if len(currentNode.Children) == 0 {
                 break
             }
-            children = current_node.Children
+            children = currentNode.Children
             if len(children) > 0 {
-                current_node, children = children[0], children[1:]
+                currentNode, children = children[0], children[1:]
                 continue
             }
             break
         }
 
-        lcpI = lcp(key_, current_node.key)
+        lcpI = lcpIndex(key, currentNode.key)
 
         // current node is not the one
         if lcpI == -1 {
             if len(children) > 0 {
-                current_node, children = children[0], children[1:]
+                currentNode, children = children[0], children[1:]
                 continue
             }
             break
         }
 
         // key matches current node: returning it
-        if lcpI == len(key_)-1 && lcpI == len(current_node.key)-1 {
-            return current_node
+        if lcpI == len(key)-1 && lcpI == len(currentNode.key)-1 {
+            return currentNode, true
         }
-        key_ = key_[lcpI+1:]
+        key = key[lcpI+1:]
 
         // in this case the key we are looking for is a substring
         // of the current node key so we need to split the node
-        if len(key_) == 0 {
+        if len(key) == 0 {
             if createIfMissing == true {
-                current_node.split(lcpI + 1)
+                currentNode.split(lcpI + 1)
+                return currentNode, true
             }
-            return current_node
+            return currentNode, false
         }
 
         // current node key is a substring of the requested
         // key so we go deep in the tree from here
-        if lcpI == len(current_node.key)-1 {
-            last_node = current_node
-            children = current_node.Children
+        if lcpI == len(currentNode.key)-1 {
+            lastNode = currentNode
+            children = currentNode.Children
             if len(children) == 0 {
                 break
             }
-            current_node, children = children[0], children[1:]
+            currentNode, children = children[0], children[1:]
             continue
         }
 
         if createIfMissing == true {
-            current_node.split(lcpI + 1)
-            last_node = current_node
+            currentNode.split(lcpI + 1)
+            lastNode = currentNode
             break
         }
 
@@ -157,11 +162,11 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) *Node {
     }
 
     if createIfMissing == true {
-        newNode := newNodeWithKey(key_)
-        return last_node.appendNode(newNode)
+        newNode := newNodeWithKey(key)
+        return lastNode.appendNode(newNode), true
     }
 
-    return last_node
+    return lastNode, false
 }
 
 func (m *Node) split(index int) {
@@ -177,7 +182,7 @@ func (m *Node) split(index int) {
         child.Parent = subNode
     }
 
-    m.key = []byte(leftKey)
+    m.key = leftKey
     m.Children = []*Node{subNode}
     m.data = []string{}
     m.IsLeaf = false
@@ -189,14 +194,13 @@ func (m *Node) copyNode() *Node {
     return n
 }
 
-func newNodeWithKey(key []byte) *Node {
+func newNodeWithKey(key string) *Node {
     n := newNode()
     n.key = key
     return n
 }
 
 func (m *Node) appendNode(n *Node) *Node {
-    //n.depth = m.depth + 1
     m.Children = append(m.Children, n)
     n.IsLeaf = true
     n.Parent = m
@@ -206,31 +210,75 @@ func (m *Node) appendNode(n *Node) *Node {
 // Insert inserts a new value in the map for the specified key
 // If the key is already present in the map, the value is appended
 // to the values list associated with the given key
-func (m *Node) Insert(key string, values ...string) {
-    n := m.nodeForKey(key, true)
+func (m *PrefixMap) Insert(key string, values ...string) {
+    mNode := (*Node)(m)
+    n, _ := mNode.nodeForKey(key, true)
     n.data = append(n.data, values...)
 }
 
-func (m *Node) Replace(key string, values ...string) {
-    n := m.nodeForKey(key, true)
+// Replace replaces the value(s) for the given key in the map
+// with the give ones. If no such key is present, this method
+// behaves the same as Insert
+func (m *PrefixMap) Replace(key string, values ...string) {
+    mNode := (*Node)(m)
+    n, _ := mNode.nodeForKey(key, true)
     n.data = values
 }
 
-func (m *Node) Contains(key string) bool {
-    return m.nodeForKey(key, false) != nil && string(m.key) == key
+// Contains checks if the given key is present in the map
+// In this case, an exact match case is considered
+// If you're interested in prefix-based check: ContainsPrefix
+func (m *PrefixMap) Contains(key string) bool {
+    mNode := (*Node)(m)
+    retrievedNode, exactMatch := mNode.nodeForKey(key, false)
+    return retrievedNode != nil && exactMatch
 }
 
+// ContainsPrefix checks if the given prefix is present as ket in the map
+func (m *PrefixMap) ContainsPrefix(key string) bool {
+    mNode := (*Node)(m)
+    retrievedNode, _ := mNode.nodeForKey(key, false)
+    return retrievedNode != nil
+}
+
+// Key Retrieves current node key
+// complexity: MAX|O(log(N))| where N
+// is the number of nodes in the map.
+// Number of nodes in the map cannot exceed
+// number of keys + 1.
 func (m *Node) Key() string {
-    return string(m.key)
+    node := m
+    k := make([]byte, 0, len(m.key))
+    for node != nil && node.isRoot != true {
+        key := string(node.key) // triggering a copy here
+        k = append([]byte(key), k...)
+        node = node.Parent
+    }
+    return string(k)
 }
 
+// PrefixCallback is invoked by EachPrefix for each prefix reached
+// by the traversal. The callback has the ability to affect the traversal.
+// Returning skipBranch = true will make the traversal skip the current branch
+// and jump to the sibling node in the map. Returning halt = true, instead,
+// will halt the traversal altogether.
 type PrefixCallback func(prefix Prefix) (skipBranch bool, halt bool)
+
+// Prefix holds prefix information
+// passed to the PrefixCallback instance by
+// the EachPrefifx method.
 type Prefix struct {
-    node   *Node
-    Key    string
+    node *Node
+
+    // The current prefix string
+    Key string
+
+    // The values associated to the current prefix
     Values []string
 }
 
+// Depth returns the depth of the corresponding
+// node for this prefix in the map.
 func (p *Prefix) Depth() int {
     return p.node.Depth()
 }
@@ -238,16 +286,17 @@ func (p *Prefix) Depth() int {
 // EachPrefix iterates over the prefixes contained in the
 // map using a DFS algorithm. The callback can be used to skip
 // a prefix branch altogether or halt the iteration.
-func (m *Node) EachPrefix(callback PrefixCallback) {
+func (m *PrefixMap) EachPrefix(callback PrefixCallback) {
+    mNode := (*Node)(m)
     stack := stackgo.NewStack()
     prefix := []byte{}
 
     skipsubtree := false
     halt := false
     addedLengths := stackgo.NewStack()
-    lastDepth := m.Depth()
+    lastDepth := mNode.Depth()
 
-    stack.Push(m)
+    stack.Push(mNode)
     for stack.Size() != 0 {
         node := stack.Pop().(*Node)
         if !node.isRoot {
@@ -258,7 +307,7 @@ func (m *Node) EachPrefix(callback PrefixCallback) {
             currentDepth := node.Depth()
             if lastDepth >= node.Depth() {
                 var length = 0
-                for i := 0; i < (lastDepth - currentDepth)+1; i++ {
+                for i := 0; i < (lastDepth-currentDepth)+1; i++ {
                     length += addedLengths.Pop().(int)
                 }
                 prefix = prefix[:len(prefix)-length]
@@ -270,9 +319,9 @@ func (m *Node) EachPrefix(callback PrefixCallback) {
             // building the info
             // data to pass to the callback
             info := Prefix{
-                node   : node,
-                Key    : string(prefix),
-                Values : node.data,
+                node:   node,
+                Key:    string(prefix),
+                Values: node.data,
             }
 
             skipsubtree, halt = callback(info)
@@ -298,7 +347,7 @@ func (m *Node) EachPrefix(callback PrefixCallback) {
 // returns the lcp and the index of the last
 // character matching
 //
-func lcp(strs ...[]byte) int {
+func lcpIndex(strs ...string) int {
     if len(strs) < 2 {
         return -1
     }
@@ -318,7 +367,7 @@ func lcp(strs ...[]byte) int {
         switch {
         case len(s) < len(min):
             min = s
-        case len(s) > len(max):
+        case len(s) >= len(max):
             max = s
         }
     }

@@ -1,4 +1,4 @@
-package stringmap
+package prefixmap
 
 import (
     "testing"
@@ -20,7 +20,7 @@ func Test_queue(t *testing.T) {
         word := make([]byte, 0, len(v.w))
         for i := 0; i < len(v.w); i++ {
             t_ := newNode()
-            t_.key = append(t_.key, v.w[i])
+            t_.key = string(append([]byte(t_.key), v.w[i]))
             q.enqueue(t_)
         }
 

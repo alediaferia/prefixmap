@@ -1,4 +1,4 @@
-package stringmap
+package prefixmap
 
 // little queue implementation
 
