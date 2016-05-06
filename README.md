@@ -12,7 +12,7 @@ Creating a PrefixMap
 ---
 ```go
 // creates the map object
-prefixMap := prefixmap.NewMap()
+prefixMap := prefixmap.New()
 ```
 
 Inserting a value
