@@ -12,7 +12,7 @@ import (
 func TestInsert(t *testing.T) {
     m := New()
     n := (*Node)(m)
-    expectedValues := []string{"Diaferia", "alediaferia", "adiaferia"}
+    expectedValues := []interface{}{"Diaferia", "alediaferia", "adiaferia"}
     m.Insert("Alessandro", expectedValues...)
 
     node, _ := n.nodeForKey("Alessandro", false)
@@ -54,7 +54,7 @@ func TestInsertWithLengtheningKeys(t *testing.T) {
 func TestInsertAppends(t *testing.T) {
     m := New()
     n := (*Node)(m)
-    expectedValues := []string{"Diaferia", "alediaferia", "adiaferia"}
+    expectedValues := []interface{}{"Diaferia", "alediaferia", "adiaferia"}
     m.Insert("Alessandro", expectedValues[:2]...) // first two values
     m.Insert("Alessandro", expectedValues[2:]...) // rest
 
@@ -67,7 +67,7 @@ func TestInsertAppends(t *testing.T) {
 func TestInsertSubstringKeys(t *testing.T) {
     m := New()
     n := (*Node)(m)
-    expectedValues := []string{"Diaferia", "alediaferia", "adiaferia"}
+    expectedValues := []interface{}{"Diaferia", "alediaferia", "adiaferia"}
     m.Insert("stringmap", expectedValues[:2]...) // first two values
     m.Insert("string", expectedValues[2:]...)    // rest
 
@@ -88,12 +88,12 @@ func TestInsertSubstringKeys(t *testing.T) {
 func TestPrefixAsKey(t *testing.T) {
     testCases := []struct {
         insertKey, getKey string
-        values            []string
+        values            []interface{}
     }{
         {
             insertKey: "stringmap",
             getKey:    "string",
-            values:    []string{"a", "b", "c"},
+            values:    []interface{}{"a", "b", "c"},
         },
     }
 
@@ -210,11 +210,12 @@ func TestNodeCount(t *testing.T) {
 
 func TestPrefixIteration(t *testing.T) {
     testCases := []struct {
-        keys, expectedPrefixes []string
+        keys []string
+        expectedPrefixes []interface{}
     }{
         {
             keys:             []string{"benchmark", "bench", "bob", "blueray", "bluetooth"},
-            expectedPrefixes: []string{"b", "blue", "bluetooth", "blueray", "bob", "bench", "benchmark"},
+            expectedPrefixes: []interface{}{"b", "blue", "bluetooth", "blueray", "bob", "bench", "benchmark"},
         },
     }
 
@@ -224,7 +225,7 @@ func TestPrefixIteration(t *testing.T) {
             m.Insert(key, key)
         }
 
-        foundPrefixes := []string{}
+        foundPrefixes := []interface{}{}
         m.EachPrefix(func(prefix Prefix) (bool, bool) {
             foundPrefixes = append(foundPrefixes, prefix.Key)
             return false, false
@@ -403,7 +404,7 @@ func BenchmarkContainsNativeMap(b *testing.B) {
 }
 
 /* utils */
-func testEq(a, b []string) bool {
+func testEq(a, b []interface{}) bool {
 
     if a == nil && b == nil {
         return true

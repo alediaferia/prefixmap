@@ -19,7 +19,7 @@ type Node struct {
     // private
     key    string
     isRoot bool
-    data   []string
+    data   []interface{}
 }
 
 // PrefixMap type
@@ -184,7 +184,7 @@ func (m *Node) split(index int) {
 
     m.key = leftKey
     m.Children = []*Node{subNode}
-    m.data = []string{}
+    m.data = []interface{}{}
     m.IsLeaf = false
 }
 
@@ -210,7 +210,7 @@ func (m *Node) appendNode(n *Node) *Node {
 // Insert inserts a new value in the map for the specified key
 // If the key is already present in the map, the value is appended
 // to the values list associated with the given key
-func (m *PrefixMap) Insert(key string, values ...string) {
+func (m *PrefixMap) Insert(key string, values ...interface{}) {
     mNode := (*Node)(m)
     n, _ := mNode.nodeForKey(key, true)
     n.data = append(n.data, values...)
@@ -219,7 +219,7 @@ func (m *PrefixMap) Insert(key string, values ...string) {
 // Replace replaces the value(s) for the given key in the map
 // with the give ones. If no such key is present, this method
 // behaves the same as Insert
-func (m *PrefixMap) Replace(key string, values ...string) {
+func (m *PrefixMap) Replace(key string, values ...interface{}) {
     mNode := (*Node)(m)
     n, _ := mNode.nodeForKey(key, true)
     n.data = values
@@ -274,7 +274,7 @@ type Prefix struct {
     Key string
 
     // The values associated to the current prefix
-    Values []string
+    Values []interface{}
 }
 
 // Depth returns the depth of the corresponding

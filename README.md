@@ -45,11 +45,12 @@ prefixMap.Replace("key", "new value")
 Iterate over prefixes
 ---
 
-`PrefixMap` exposes an `EachPrefix` method that executes a callback function
-against every prefix in the map. The prefixes are iterated over using a [Depth First Search](https://en.wikipedia.org/wiki/Depth-first_search)
+[PrefixMap](https://godoc.org/github.com/typeflow/prefixmap) exposes an [EachPrefix](https://godoc.org/github.com/typeflow/prefixmap#PrefixMap.EachPrefix) 
+method that executes a callback function against every prefix in the map. 
+The prefixes are iterated over using a [Depth First Search](https://en.wikipedia.org/wiki/Depth-first_search)
 algorithm. At each iteration the given callback is invoked. The callback allows you to skip a branch
 iteration altogether if you're not satisfied with what you're looking for.
-Check out `PrefixCallback` documentation for more information.
+Check out [PrefixCallback](https://godoc.org/github.com/typeflow/prefixmap#PrefixCallback) documentation for more information.
 
 ```go
 prefixMap.EachPrefix(func(prefix Prefix) (bool, bool) {
