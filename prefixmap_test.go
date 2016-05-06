@@ -12,12 +12,12 @@ import (
 func TestInsert(t *testing.T) {
     m := New()
     n := (*Node)(m)
-    expectedValues := []interface{}{"Diaferia", "alediaferia", "adiaferia"}
-    m.Insert("Alessandro", expectedValues...)
+    expectedValues := []interface{}{"bar", "baz", "quz"}
+    m.Insert("foo", expectedValues...)
 
-    node, _ := n.nodeForKey("Alessandro", false)
+    node, _ := n.nodeForKey("foo", false)
     if testEq(expectedValues, node.data) != true {
-        t.Errorf("Unexpected value for node 'Alessandro': expected (%v), got (%v)", expectedValues, node.data)
+        t.Errorf("Unexpected value for node 'foo': expected (%v), got (%v)", expectedValues, node.data)
     }
 }
 
@@ -54,13 +54,26 @@ func TestInsertWithLengtheningKeys(t *testing.T) {
 func TestInsertAppends(t *testing.T) {
     m := New()
     n := (*Node)(m)
-    expectedValues := []interface{}{"Diaferia", "alediaferia", "adiaferia"}
-    m.Insert("Alessandro", expectedValues[:2]...) // first two values
-    m.Insert("Alessandro", expectedValues[2:]...) // rest
+    expectedValues := []interface{}{"bar", "baz", "quz"}
+    m.Insert("foo", expectedValues[:2]...) // first two values
+    m.Insert("foo", expectedValues[2:]...) // rest
 
-    node, _ := n.nodeForKey("Alessandro", false)
+    node, _ := n.nodeForKey("foo", false)
     if testEq(expectedValues, node.data) != true {
-        t.Errorf("Unexpected value for node 'Alessandro': expected (%v), got (%v)", expectedValues, node.data)
+        t.Errorf("Unexpected value for node 'foo': expected (%v), got (%v)", expectedValues, node.data)
+    }
+}
+
+func TestReplaceReplaces(t *testing.T) {
+    m := New()
+    n := (*Node)(m)
+    expectedValues := []interface{}{"bar", "baz", "quz"}
+    m.Replace("foo", expectedValues[:2]...) // first two values
+    m.Replace("foo", expectedValues[2:]...) // rest
+
+    node, _ := n.nodeForKey("foo", false)
+    if testEq(expectedValues[2:], node.data) != true {
+        t.Errorf("Unexpected value for node 'foo': expected (%v), got (%v)", expectedValues, node.data)
     }
 }
 
