@@ -85,6 +85,26 @@ func TestInsertSubstringKeys(t *testing.T) {
     }
 }
 
+func TestGet(t *testing.T) {
+    testCases := []struct {
+        getKey string
+        values            []interface{}
+    }{
+        {
+            getKey:    "string",
+            values:    []interface{}{"a", "b", "c"},
+        },
+    }
+    
+    for _, testCase := range testCases {
+        m := New()
+        m.Insert(testCase.getKey, testCase.values...)
+        if data := m.Get(testCase.getKey); testEq(data, testCase.values) != true {
+            t.Errorf("Unexpected value for key '%s': expected (%v), got (%v)", testCase.getKey, testCase.values, data)
+        }
+    }
+}
+
 func TestPrefixAsKey(t *testing.T) {
     testCases := []struct {
         insertKey, getKey string
@@ -112,15 +132,19 @@ func TestLcp(t *testing.T) {
         source, destination, expected string
         index                         int // expected index
     }{{
-        "string", "stringmap", "string",
-        5,
-    },
+            "string", "stringmap", "string",
+            5,
+       },
         {
             "romane", "romanus", "roman",
             4,
         },
         {
             "r", "a", "",
+            -1,
+        },
+        {
+            "foobar", "bar", "",
             -1,
         },
     }
@@ -232,6 +256,83 @@ func TestPrefixIteration(t *testing.T) {
         })
         if testEq(foundPrefixes, tc.expectedPrefixes) != true {
             t.Errorf("Unexpected prefixes list: got %v, expected %v", foundPrefixes, tc.expectedPrefixes)
+        }
+    }
+}
+
+func TestContains(t *testing.T) {
+    type expectedResult struct {
+            key    string
+            result bool
+    }
+    testCases := []struct{
+        keys []string
+        expectedResults []expectedResult
+    }{
+        {
+            keys: []string{"a","b","c"},
+            expectedResults: []expectedResult{
+                {
+                    "a", true,
+                },
+                {
+                    "d", false,
+                },
+            },
+        },
+    }
+    
+    for _, tc := range testCases {
+        m := New()
+        for _, key := range tc.keys {
+            m.Insert(key, key)
+        }
+        for _, er := range tc.expectedResults {
+            if got := m.Contains(er.key); got != er.result {
+                t.Errorf("Unexpected result for key %s: got %v, expected %v", er.key, got, er.result)
+            }
+        }
+    }
+}
+
+func TestContainsPrefix(t *testing.T) {
+        type expectedResult struct {
+            key    string
+            result bool
+    }
+    testCases := []struct{
+        keys []string
+        expectedResults []expectedResult
+    }{
+        {
+            keys: []string{"foobar","golang"},
+            expectedResults: []expectedResult{
+                {
+                    "foo", true,
+                },
+                {
+                    "bar", false,
+                },
+                {
+                    "go", true,
+                },
+                {
+                    "lang", false,
+                },
+            },
+        },
+    }
+    
+    for _, tc := range testCases {
+        m := New()
+        for _, key := range tc.keys {
+            m.Insert(key, key)
+        }
+        for _, er := range tc.expectedResults {
+            if got := m.ContainsPrefix(er.key); got != er.result {
+                t.Errorf("Unexpected result for key %s: got %v, expected %v", er.key, got, er.result)
+                (*Node)(m).print(-1)
+            }
         }
     }
 }

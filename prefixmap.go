@@ -62,7 +62,7 @@ func (m *Node) Depth() int {
 // for the given key parameter or false if it is the closest match found
 // Algorithm: BFS
 func (m *Node) nodeForKey(key string, createIfMissing bool) (*Node, bool) {
-    var lastNode = m
+    var lastNode *Node = nil
     var currentNode = m
 
     // holds the next children to explore
@@ -163,6 +163,9 @@ func (m *Node) nodeForKey(key string, createIfMissing bool) (*Node, bool) {
 
     if createIfMissing == true {
         newNode := newNodeWithKey(key)
+        if lastNode == nil {
+            return m.appendNode(newNode), true
+        }
         return lastNode.appendNode(newNode), true
     }
 
@@ -234,7 +237,19 @@ func (m *PrefixMap) Contains(key string) bool {
     return retrievedNode != nil && exactMatch
 }
 
-// ContainsPrefix checks if the given prefix is present as ket in the map
+// Get returns the data associated with the given key in the map
+// or nil if no such key is present in the map
+func (m *PrefixMap) Get(key string) []interface{} {
+    mNode := (*Node)(m)
+    retrievedNode, exactMatch := mNode.nodeForKey(key, false)
+    if !exactMatch {
+        return nil
+    }
+    
+    return retrievedNode.data
+}
+
+// ContainsPrefix checks if the given prefix is present as key in the map
 func (m *PrefixMap) ContainsPrefix(key string) bool {
     mNode := (*Node)(m)
     retrievedNode, _ := mNode.nodeForKey(key, false)
