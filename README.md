@@ -1,6 +1,6 @@
 * [![Build Status](https://travis-ci.org/alediaferia/prefixmap.svg?branch=master)](https://travis-ci.org/alediaferia/prefixmap)
 * [![Coverage Status](https://coveralls.io/repos/github/alediaferia/prefixmap/badge.svg?branch=master)](https://coveralls.io/github/alediaferia/prefixmap?branch=master)
-* [![GoDoc](https://godoc.org/github.com/typeflow/typeflow-go/web?status.png)](https://godoc.org/github.com/typeflow/typeflow-go)
+* [![GoDoc](https://godoc.org/github.com/alediaferia/prefixmap/web?status.png)](https://godoc.org/github.com/alediaferia/prefixmap)
 
 # PrefixMap 
 PrefixMap is a prefix-enhanced map that eases the retrieval of values based on key prefixes.
