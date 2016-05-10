@@ -249,6 +249,27 @@ func (m *PrefixMap) Get(key string) []interface{} {
     return retrievedNode.data
 }
 
+// GetByPrefix returns a flattened collection of values
+// associated with the given prefix key
+func (m *PrefixMap) GetByPrefix(key string) []interface{} {
+    mNode := (*Node)(m)
+    retrievedNode, _ := mNode.nodeForKey(key, false)
+    
+    // now, fetching all the values (DFS)
+    stack := stackgo.NewStack()
+    values := []interface{}{}
+    stack.Push(retrievedNode)
+    for stack.Size() > 0 {
+        node := stack.Pop().(*Node)
+        values = append(values, node.data...)
+        for _, c := range node.Children {
+            stack.Push(c)
+        }
+    }
+    
+    return values
+}
+
 // ContainsPrefix checks if the given prefix is present as key in the map
 func (m *PrefixMap) ContainsPrefix(key string) bool {
     mNode := (*Node)(m)

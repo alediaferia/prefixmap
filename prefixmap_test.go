@@ -140,6 +140,32 @@ func TestPrefixAsKey(t *testing.T) {
     }
 }
 
+func TestGetByPrefix(t *testing.T) {
+    testCases := []struct {
+        keys []interface{}
+        prefix string
+        expectedValues []interface{}
+    }{
+        {
+            keys: []interface{}{ "prefix1", "prefix2", "prefix3" },
+            prefix: "prefix",
+            expectedValues: []interface{}{"prefix3", "prefix2", "prefix1"},
+        },
+    }
+    
+    for _, tc := range testCases {
+        m := New()
+        for _, k := range tc.keys {
+            m.Insert(k.(string), k)
+        }
+        data := m.GetByPrefix(tc.prefix)
+        
+        if testEq(tc.expectedValues, data) != true {
+            t.Errorf("Unexpected value for prefix '%s', expected: %v, got: %v", tc.prefix, tc.expectedValues, data)
+        }
+    }
+}
+
 func TestLcp(t *testing.T) {
     lcpTestCases := []struct {
         source, destination, expected string
