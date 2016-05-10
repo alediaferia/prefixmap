@@ -67,6 +67,16 @@ prefixMap.Insert("foo", "bar", "baz", "quz")
 data := prefixMap.Get("foo") // #=> [bar, baz, quz]
 ```
 
+Getting by keys prefix
+---
+```go
+prefixMap.Insert("prefix1", "prefix1")
+prefixMap.Insert("prefix2", "prefix2")
+prefixMap.Insert("prefix3", "prefix3")
+
+data := prefixMap.GetByPrefix("prefix") // #=> [prefix1, prefix2, prefix3]
+```
+
 Iterate over prefixes
 ---
 
